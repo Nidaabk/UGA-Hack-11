@@ -68,10 +68,13 @@ while cap.isOpened():
         bprob_val = bprob.detach().numpy() 
         x1,y1,x2,y2 = bbox.detach().numpy()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         message = CLASSES[bclass_idx]
 
 =======
+=======
+>>>>>>> cfdbb03 (first commit)
         x1/=2
         y1/=2
         x2/=2
