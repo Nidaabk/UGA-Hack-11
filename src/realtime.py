@@ -12,38 +12,48 @@ import time
 
 
 # Initialize logger and handlers
-logger = get_logger("realtime")
-detection_handler = DetectionHandler()
+def start_recording():
+    logger = get_logger("realtime")
+    detection_handler = DetectionHandler()
 
-logger.print_banner()
-logger.realtime("Initializing real-time sign language detection...")
+    logger.print_banner()
+    logger.realtime("Initializing real-time sign language detection...")
 
-transforms = A.Compose(
-        [   
-            A.Resize(224,224),
-            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            A.ToTensorV2()
-        ]
-    )
+    transforms = A.Compose(
+            [   
+                A.Resize(224,224),
+                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                A.ToTensorV2()
+            ]
+        )
 
-model = DETR(num_classes=3)
-model.eval()
-model.load_pretrained('checkpoints/99_model.pt')
-CLASSES = get_classes() 
-COLORS = get_colors() 
+    model = DETR(num_classes=6)
+    model.eval()
+    model.load_pretrained('checkpoints/99_model.pt')
+    CLASSES = get_classes() 
+    COLORS = get_colors() 
 
-logger.realtime("Starting camera capture...")
-cap = cv2.VideoCapture(0)
+    logger.realtime("Starting camera capture...")
+    cap = cv2.VideoCapture(0)
 
-# Initialize performance tracking
-frame_count = 0
-fps_start_time = time.time()
+    # Initialize performance tracking
+    frame_count = 0
+    fps_start_time = time.time()
 
-while cap.isOpened(): 
+    while cap.isOpened():
+        if not record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_time, detection_handler, COLORS):
+            break
+
+
+    cap.release() 
+    cv2.destroyAllWindows() 
+
+def record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_time, detection_handler, COLORS): 
+    message = ""
     ret, frame = cap.read()
     if not ret:
         logger.error("Failed to read frame from camera")
-        break
+        message = "error"
         
     # Time the inference
     inference_start = time.time()
@@ -67,20 +77,16 @@ while cap.isOpened():
         bclass_idx = bclass.detach().numpy()
         bprob_val = bprob.detach().numpy() 
         x1,y1,x2,y2 = bbox.detach().numpy()
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 
         message = CLASSES[bclass_idx]
 
-=======
-=======
->>>>>>> cfdbb03 (first commit)
         x1/=2
         y1/=2
         x2/=2
         y2/=2
         
->>>>>>> parent of 93fa781 (tweaked realtime.py to integrate with project)
+
         detections.append({
             'class': CLASSES[bclass_idx],
             'confidence': float(bprob_val),
@@ -111,7 +117,5 @@ while cap.isOpened():
 
     if cv2.waitKey(1) & 0xFF == ord('q'): 
         logger.realtime("Stopping real-time detection...")
-        break
-
-cap.release() 
-cv2.destroyAllWindows() 
+        message = "error"
+    return message

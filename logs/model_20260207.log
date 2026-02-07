@@ -1,0 +1,7 @@
+2026-02-07 17:21:15,727 - model - ERROR - [error]Failed to load checkpoint: Error(s) in loading state_dict for DETR:
+	size mismatch for linear_class.weight: copying a param with shape torch.Size([7, 256]) from checkpoint, the shape in current model is torch.Size([4, 256]).
+	size mismatch for linear_class.bias: copying a param with shape torch.Size([7]) from checkpoint, the shape in current model is torch.Size([4]).[/error]
+2026-02-07 17:21:37,268 - model - ERROR - [error]Failed to load checkpoint: Error(s) in loading state_dict for DETR:
+	size mismatch for linear_class.weight: copying a param with shape torch.Size([7, 256]) from checkpoint, the shape in current model is torch.Size([4, 256]).
+	size mismatch for linear_class.bias: copying a param with shape torch.Size([7]) from checkpoint, the shape in current model is torch.Size([4]).[/error]
+2026-02-07 17:22:20,938 - model - ERROR - [error]Failed to load checkpoint: [Errno 2] No such file or directory: 'checkpoints/99_model.pt'[/error]
