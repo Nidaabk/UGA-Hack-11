@@ -51,10 +51,10 @@ def start_recording():
         if m == "error":
             break
 
-        if len(common_list)<10:
+        if len(common_list)<3:
             common_list.append(m)
         else:
-            #finding most common message out of the 10 collected messages
+            #finding most common message out of 3 collected messages to avoid false positives 
             common_message = Counter(common_list).most_common(1)[0][0]
             common_list = []
 
@@ -62,8 +62,6 @@ def start_recording():
             last_used = common_message
             if common_message == "": continue
             print(common_message)
-
-
 
     cap.release() 
     cv2.destroyAllWindows() 

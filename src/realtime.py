@@ -63,11 +63,11 @@ def record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_
 
     probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
     max_probs, max_classes = probabilities.max(-1)
-    keep_mask = max_probs > 0.8
+    keep_mask = max_probs > 0.85
 
     batch_indices, query_indices = torch.where(keep_mask) 
 
-    bboxes = rescale_bboxes(result['pred_boxes'][batch_indices, query_indices,:], (1920,1080))
+    bboxes = rescale_bboxes(result['pred_boxes'][batch_indices, query_indices,:], (630,512))
     classes = max_classes[batch_indices, query_indices]
     probas = max_probs[batch_indices, query_indices]
 
@@ -77,10 +77,7 @@ def record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_
         bclass_idx = bclass.detach().numpy()
         bprob_val = bprob.detach().numpy() 
         x1,y1,x2,y2 = bbox.detach().numpy()
-        x1/=2
-        y1/=2
-        x2/=2
-        y2/=2
+
         message = CLASSES[bclass_idx]
 
         detections.append({
