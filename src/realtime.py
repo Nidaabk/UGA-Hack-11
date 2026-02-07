@@ -28,7 +28,7 @@ transforms = A.Compose(
 
 model = DETR(num_classes=3)
 model.eval()
-model.load_pretrained('pretrained/4426_model.pt')
+model.load_pretrained('checkpoints/99_model.pt')
 CLASSES = get_classes() 
 COLORS = get_colors() 
 
@@ -67,6 +67,10 @@ while cap.isOpened():
         bclass_idx = bclass.detach().numpy()
         bprob_val = bprob.detach().numpy() 
         x1,y1,x2,y2 = bbox.detach().numpy()
+        x1/=2
+        y1/=2
+        x2/=2
+        y2/=2
         
         detections.append({
             'class': CLASSES[bclass_idx],
