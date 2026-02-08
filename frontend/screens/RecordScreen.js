@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import messageData from '../flask-backend/src/message.json';
 
-function CounterApp() {
-  // Declare a state variable
-  const [count, setCount] = useState(0);
-
-  // Declare the function you want to run
-  const handleClick = () => {
-    setCount(count + 1); // Example action: increment the count
-    alert('Button clicked! Count is now: ' + (count + 1));
-  };
 
 export default function RecordScreen({ navigation }) {
   const [model_data, set_model_data] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState("English");
-  //const [modelData, setModelData] = useState([{}]);
+  const [modelData, setModelData] = useState([{}]);
 
     useEffect(() =>{
     console.log("REQUESTING:", "http://127.0.0.1:8080/api/modelinfo");
@@ -78,7 +70,7 @@ export default function RecordScreen({ navigation }) {
         {/* Record / Stop Toggle Button */}
         <TouchableOpacity
           style={styles.recordButton}
-          onPress={fetchInfo}
+          onPress={start_recording}
         >
           <Image
             source={
@@ -99,8 +91,10 @@ export default function RecordScreen({ navigation }) {
           // (typeof modelData.test === 'undefined')
           // ? (<Text>{"loading"}</Text>) 
           // : (<Text>{modelData.test}</Text>)
+          
           language === "English"
-            ? (model_data)//"test")
+            ? 
+              <Text>{messageData.map(item => item.message).join(" ")}</Text>
             : "Esperando seña..."
           }
         </Text>
@@ -108,6 +102,27 @@ export default function RecordScreen({ navigation }) {
 
     </View>
   );
+}
+
+function start_recording() {
+  // Declare the function you want to run
+  const startRecording = () => {
+     const [modelData, setModelData] = useState([{}]);
+
+    useEffect(() =>{
+    console.log("REQUESTING:", "http://127.0.0.1:8080/api/model_record");
+    fetch("http://127.0.0.1:8080/api/model_record")
+    .then(res => res.text())
+    .then(text => {
+      const data = JSON.parse(text); 
+      console.log("test3: parsed JSON:", data);
+      set_model_data(data.test);
+    })
+    .catch(err => {
+      console.error("FETCH FAILED:", err);
+    });
+}, []);
+  };
 }
 
 const styles = StyleSheet.create({

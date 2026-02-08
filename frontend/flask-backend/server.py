@@ -1,4 +1,5 @@
 
+
 from flask_cors import CORS
 from src import integration_methods
 from flask import Flask, jsonify
@@ -11,9 +12,11 @@ def return_home():
     data = jsonify({"test": "works!"})
     return data
 
-@app.route('/api/model_record', methods=['POST'])
+@app.route('/api/model_record', methods=['GET'])
 def record():
-    integration_methods.start_recording()
+    data_list = integration_methods.start_recording()
+    jeson = [{"message": data_list}]
+    return jsonify(jeson)
 
 
 if __name__=="__main__":

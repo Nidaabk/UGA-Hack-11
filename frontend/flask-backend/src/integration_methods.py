@@ -10,12 +10,16 @@ from utils.logger import get_logger
 from utils.rich_handlers import DetectionHandler, create_detection_live_display
 import sys
 import time 
+import json
+
+import os
 
 from collections import Counter
 
 
 # Initialize logger and handlers
 def start_recording():
+    data_list = []
     logger = get_logger("realtime")
     detection_handler = DetectionHandler()
 
@@ -49,7 +53,9 @@ def start_recording():
     while cap.isOpened():
         m = realtime.record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_time, detection_handler, COLORS)
         if m == "error":
-            break
+            cap.release() 
+            cv2.destroyAllWindows() 
+            return data_list
 
         if len(common_list)<3:
             common_list.append(m)
@@ -61,14 +67,21 @@ def start_recording():
             if common_message == last_used: continue
             last_used = common_message
             if common_message == "": continue
-            print(common_message)
+            data_list.append(common_message)
+            print(data_list)
 
     cap.release() 
     cv2.destroyAllWindows() 
+    return data_list
 
 
 if __name__ == "__main__":
     user = input("press y to start recording")
     if user=="y":
-        start_recording()
+        message = start_recording()
+        jeson = [{"message":message}]
+        print(message)
+        file_path = os.path.join(os.path.dirname(__file__), "message.json")
+        with open(file_path, 'w') as json_file:
+            json.dump(jeson, json_file, indent=4)  # indent makes it readable
         print("done")

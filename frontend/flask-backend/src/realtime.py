@@ -63,9 +63,9 @@ def record_info(cap, logger, transforms, model, CLASSES, frame_count, fps_start_
 
     probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
     max_probs, max_classes = probabilities.max(-1)
-    keep_mask = max_probs > 0.85
+    keep_mask = max_probs > 0.80
 
-    batch_indices, query_indices = torch.where(keep_mask) x
+    batch_indices, query_indices = torch.where(keep_mask)
 
     bboxes = rescale_bboxes(result['pred_boxes'][batch_indices, query_indices,:], (1920,1080))
     classes = max_classes[batch_indices, query_indices]
