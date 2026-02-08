@@ -49,6 +49,8 @@ export default function ListenScreen({ navigation }) {
 
   const startRecording = async () => {
     try {
+      setIsPlaying(true);
+
       await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
@@ -60,14 +62,16 @@ export default function ListenScreen({ navigation }) {
       );
 
       setRecording(recording);
-      setIsPlaying(true);
     } catch (err) {
       console.error("Failed to start recording", err);
+      setIsPlaying(false);
     }
   };
 
   const stopRecording = async () => {
     try {
+      if (!recording) return;
+
       setIsPlaying(false);
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
@@ -177,12 +181,15 @@ export default function ListenScreen({ navigation }) {
           }}
         >
           <Image
+            key={isPlaying ? "stop" : "play"}
             source={
               isPlaying
                 ? require('../assets/images/stop.png')
                 : require('../assets/images/play.png')
             }
             style={styles.playIcon}
+            resizeMode="contain"
+            onError={(e) => console.log("ICON LOAD ERROR:", e.nativeEvent)}
           />
         </TouchableOpacity>
 
