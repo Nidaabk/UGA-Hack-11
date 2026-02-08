@@ -1,10 +1,81 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Audio } from "expo-av";
+
+const BACKEND_URL = "http://172.21.210.67:3001";
 
 export default function ListenScreen({ navigation }) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [language, setLanguage] = useState("English");
+  const [recording, setRecording] = useState(null);
+  const [transcript, setTranscript] = useState("");
+
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(recording);
+      setIsPlaying(true);
+    } catch (err) {
+      console.error("Failed to start recording", err);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      setIsPlaying(false);
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+
+      sendAudioToBackend(uri);
+    } catch (err) {
+      console.error("Failed to stop recording", err);
+    }
+  };
+
+  const sendAudioToBackend = async (uri) => {
+    const formData = new FormData();
+
+    formData.append("audio", {
+      uri,
+      name: "speech.webm",
+      type: "audio/webm",
+    });
+
+    formData.append("langName", language.toLowerCase());
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/stt`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        console.error("STT backend error:", text);
+        return;
+      }
+
+    const data = JSON.parse(text);
+    setTranscript(data.transcript);
+    } catch (err) {
+      console.error("STT error:", err);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -56,7 +127,13 @@ export default function ListenScreen({ navigation }) {
         {/* Play / Stop Toggle Button */}
         <TouchableOpacity
           style={styles.playButton}
-          onPress={() => setIsPlaying(!isPlaying)}
+          onPress={() => {
+            if (!isPlaying) {
+              startRecording();
+            } else {
+              stopRecording();
+            }
+          }}
         >
           <Image
             source={
@@ -74,9 +151,7 @@ export default function ListenScreen({ navigation }) {
       {/* Text Output Box */}
       <View style={styles.textOutputCard}>
         <Text style={styles.placeholderText}>
-          {language === "English"
-            ? "..."
-            : "..."}
+          {transcript || "..."}
         </Text>
       </View>
 

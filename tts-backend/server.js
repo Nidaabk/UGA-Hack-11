@@ -83,9 +83,9 @@ app.post("/stt", upload.single("audio"), async (req, res) => {
     const audioBytes = req.file.buffer.toString("base64");
     const request = {
       audio: { content: audioBytes},
-      config:{ 
-        encoding: "WEBM_OPUS", 
-        sampleRateHertz: 48000, 
+      config:{  
+        encoding: "WEBM_OPUS",
+        sampleRateHertz: 48000,
         languageCode: lang.stt,
     },
     };
