@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Audio } from "expo-av";
 
@@ -10,6 +10,42 @@ export default function ListenScreen({ navigation }) {
   const [language, setLanguage] = useState("English");
   const [recording, setRecording] = useState(null);
   const [transcript, setTranscript] = useState("");
+  const [displayText, setDisplayText] = useState("");
+
+  const translateText = async (rawText, targetLangName) => {
+    try {
+      if (!rawText) return;
+
+      const trRes = await fetch(`${BACKEND_URL}/translate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: rawText,
+          targetLangName,
+        }),
+      });
+
+      const trText = await trRes.text();
+      if (!trRes.ok) {
+        console.error("TRANSLATE backend error:", trText);
+        setDisplayText(rawText); // fallback
+        return;
+      }
+
+      const trData = JSON.parse(trText);
+      setDisplayText(trData.translatedText || rawText);
+    } catch (err) {
+      console.error("TRANSLATE error:", err);
+      setDisplayText(rawText); // fallback
+    }
+  };
+
+  useEffect(() => {
+    if (transcript) {
+      const targetLangName = language.toLowerCase(); // "english" or "spanish"
+      translateText(transcript, targetLangName);
+    }
+  }, [language]); // re-translate whenever toggle changes
 
   const startRecording = async () => {
     try {
@@ -70,8 +106,14 @@ export default function ListenScreen({ navigation }) {
         return;
       }
 
-    const data = JSON.parse(text);
-    setTranscript(data.transcript);
+      const data = JSON.parse(text);
+      const raw = data.transcript || "";
+      setTranscript(raw);
+
+      // Translate immediately into current toggle language
+      const targetLangName = language.toLowerCase(); // "english" or "spanish"
+      translateText(raw, targetLangName);
+
     } catch (err) {
       console.error("STT error:", err);
     }
@@ -112,7 +154,6 @@ export default function ListenScreen({ navigation }) {
 
       </View>
 
-
       {/* Main Listen Card */}
       <View style={styles.listenArea}>
 
@@ -147,11 +188,10 @@ export default function ListenScreen({ navigation }) {
 
       </View>
 
-
       {/* Text Output Box */}
       <View style={styles.textOutputCard}>
         <Text style={styles.placeholderText}>
-          {transcript || "..."}
+          {displayText || transcript || "..."}
         </Text>
       </View>
 
@@ -206,7 +246,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 40,
   },
-
 
   iconContainer: {
     backgroundColor: 'white',

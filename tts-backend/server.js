@@ -13,7 +13,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 const ttsClient = new textToSpeech.TextToSpeechClient({
   keyFilename: process.env.GOOGLE_MULBERRY_CREDENTIALS,
 });
@@ -31,7 +30,7 @@ const LANG = {
   english: { stt: "en-US", tts: "en-US", translate: "en" },
   spanish: { stt: "es-ES", tts: "es-ES", translate: "es" },
   turkish: { stt: "tr-TR", tts: "tr-TR", translate: "tr" },
-  hindi:   { stt: "hi-IN", tts: "hi-IN", translate: "hi" },
+  hindi: { stt: "hi-IN", tts: "hi-IN", translate: "hi" },
 };
 
 function getLang(langName = "english") {
@@ -68,37 +67,42 @@ app.post("/tts", async (req, res) => {
   }
 });
 
-  
 // audio file to text, accepts multipart/form-data with "audio" field and optional "langName" field
 app.post("/stt", upload.single("audio"), async (req, res) => {
   try {
-    const {langName = "english"} = req.body;
-    const lang = getLang(langName);
-    
+    // Keep langName parsing (even if not required) so the API stays compatible
+    const { langName = "english" } = req.body;
+    void langName;
 
     if (!req.file) {
       return res.status(400).send("No audio file uploaded");
     }
-    
+
     const audioBytes = req.file.buffer.toString("base64");
     const request = {
-      audio: { content: audioBytes},
-      config:{  
+      audio: { content: audioBytes },
+      config: {
         encoding: "WEBM_OPUS",
         sampleRateHertz: 48000,
-        languageCode: lang.stt,
-    },
+        // Primary language + alternatives: lets it recognize English or Spanish automatically
+        languageCode: "en-US",
+        alternativeLanguageCodes: ["es-ES"],
+      },
     };
+
     const [response] = await sttClient.recognize(request);
     const transcript =
-      response.results?.map(r => r.alternatives?.[0]?.transcript).join(" ") || "";
+      response.results
+        ?.map((r) => r.alternatives?.[0]?.transcript)
+        .join(" ") || "";
 
-    res.json({ transcript, langUsed: lang.stt });
+    res.json({ transcript, langUsed: "en-US|es-ES" });
   } catch (error) {
     console.error(error);
     res.status(500).send("Speech-to-Text failed");
   }
 });
+
 // translates text from source language to target language
 app.post("/translate", async (req, res) => {
   try {
@@ -123,7 +127,11 @@ app.post("/translate", async (req, res) => {
 
     const translatedText = response.translations?.[0]?.translatedText || "";
 
-    res.json({ translatedText, targetLanguageCode: target, sourceLanguageCode: source || null });
+    res.json({
+      translatedText,
+      targetLanguageCode: target,
+      sourceLanguageCode: source || null,
+    });
   } catch (error) {
     console.error(error);
     console.error("TRANSLATE ERROR:", error?.message);
@@ -132,7 +140,7 @@ app.post("/translate", async (req, res) => {
     res.status(500).send("Translate failed");
   }
 });
-  
+
 app.listen(3001, () => {
   console.log("Server running on http://localhost:3001");
 });
