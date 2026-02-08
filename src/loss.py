@@ -178,7 +178,7 @@ class DETRLoss(nn.Module):
         return {'labels':self.classification_loss(yhat, y, indices), 'boxes':self.box_loss(yhat, y, indices, num_boxes)}
 
 if __name__ == "__main__":
-    num_classes = 5
+    num_classes = 6
     weight_dict = {'class_weighting': 1, 'bbox_weighting': 5, 'giou_weighting': 2}
     matcher = HungarianMatcher(weight_dict)
     criterion = DETRLoss(num_classes=num_classes, matcher=matcher, weight_dict=weight_dict, eos_coef=0.1)
